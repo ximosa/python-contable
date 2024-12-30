@@ -27,10 +27,10 @@ def editar_movimiento(id, tipo, descripcion, monto, fecha):
                 edit_fecha = st.date_input("Fecha", value=date.fromisoformat(fecha))
             col3, col4=st.columns(2)
             with col3:
-               if st.form_submit_button("Guardar cambios"):
-                  db.actualizar_movimiento(id, edit_tipo, edit_descripcion, edit_monto, edit_fecha)
-                  st.session_state[f"editar_{id}"] = False # Desactivamos el modo de edición
-                  st.rerun()
+                if st.form_submit_button("Guardar cambios"):
+                    db.actualizar_movimiento(id, edit_tipo, edit_descripcion, edit_monto, edit_fecha)
+                    st.session_state[f"editar_{id}"] = False # Desactivamos el modo de edición
+                    st.rerun()
             with col4:
                 if st.form_submit_button("Cancelar"):
                     st.session_state[f"editar_{id}"] = False
@@ -44,8 +44,8 @@ def borrar_movimiento(id):
         st.rerun()
 
 # Función para duplicar
-def duplicar_movimiento(tipo, descripcion, monto, fecha):
-    if st.button("➕", key=f"duplicar_btn", help="Repetir Movimiento"):
+def duplicar_movimiento(id, tipo, descripcion, monto, fecha):
+    if st.button("➕", key=f"duplicar_btn_{id}", help="Repetir Movimiento"):
         db.insertar_movimiento(tipo, descripcion, monto, fecha)
         st.success("Movimiento duplicado")
         st.rerun()
@@ -94,18 +94,16 @@ if movimientos:
         with col4:
             st.write(f"Descripción: {descripcion}")
         with col5:
-             st.write(f"Fecha: {fecha}")
+            st.write(f"Fecha: {fecha}")
         with col6:
-             col7, col8, col9=st.columns(3)
-             with col7:
+            col7, col8, col9=st.columns(3)
+            with col7:
                 if st.button("✏️", key=f"edit_btn_{id}", help="Editar Movimiento"):
                     st.session_state[f"editar_{id}"] = True
-             with col8:
+            with col8:
                 borrar_movimiento(id)
-             with col9:
-                 duplicar_movimiento(tipo, descripcion, monto, fecha)
+            with col9:
+                 duplicar_movimiento(id, tipo, descripcion, monto, fecha) # Pasamos id a la funcion
         editar_movimiento(id, tipo, descripcion, monto, fecha)
-
-
 else:
     st.info("No hay movimientos registrados.")

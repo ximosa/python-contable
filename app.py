@@ -51,6 +51,25 @@ def duplicar_movimiento(id, tipo, descripcion, monto, fecha):
         st.success("Movimiento duplicado")
         st.rerun()
 
+# Función para obtener los días con movimientos en el mes y año actual
+def obtener_dias_con_movimientos(movimientos, selected_date):
+    dias_con_movimientos = set()
+    for movimiento in movimientos:
+        mov_date = date.fromisoformat(movimiento[4])
+        if mov_date.month == selected_date.month and mov_date.year == selected_date.year:
+            dias_con_movimientos.add(mov_date.day)
+    return dias_con_movimientos
+
+# Función para mostrar los días del calendario
+def crear_dias_calendario(fecha, dias_con_movimientos):
+    num_dias = monthrange(fecha.year, fecha.month)[1] # Se obtiene los días del mes
+    dias = []
+    for day in range(1, num_dias + 1):
+      dia_text = f"{day}"
+      if day in dias_con_movimientos:
+        dia_text = f"({day})"
+      dias.append(dia_text)
+    return dias
 
 # Configuración de la página Streamlit
 st.set_page_config(page_title="Control de Finanzas", page_icon="💰")
@@ -84,22 +103,23 @@ all_dates = {date.fromisoformat(movimiento[4]) for movimiento in movimientos}
 min_date = min(all_dates) if all_dates else date.today()
 max_date = max(all_dates) if all_dates else date.today()
 selected_date = st.date_input("Selecciona una fecha", min_value=min_date, max_value=max_date, value=date.today())
+    
+dias_con_movimientos = obtener_dias_con_movimientos(movimientos, selected_date)
+dias_calendario = crear_dias_calendario(selected_date, dias_con_movimientos)
 
-# Función para marcar los días que tienen movimientos
-def month_cal(fecha):
-  with_moves = set()
-  for movimiento in movimientos:
-     if date.fromisoformat(movimiento[4]).month == fecha.month and date.fromisoformat(movimiento[4]).year == fecha.year:
-         with_moves.add(date.fromisoformat(movimiento[4]))
+# Se muestra el selectbox como calendario
+dia_seleccionado = st.selectbox("Día", dias_calendario)
 
-  def highlight(date):
-       return date in with_moves
-  return highlight
+if dia_seleccionado:
+     try:
+         dia_seleccionado=int(dia_seleccionado.replace('(','').replace(')',''))
+         selected_date = selected_date.replace(day=dia_seleccionado)
+     except ValueError:
+         pass # Si se selecciona uno sin () no se actualiza
+
 
 # Mostrar los movimientos
 st.subheader("Movimientos Registrados")
-
-
 if movimientos:
     # Filtrar movimientos por la fecha seleccionada
     filtered_movimientos = [movimiento for movimiento in movimientos if date.fromisoformat(movimiento[4]) == selected_date]
@@ -109,47 +129,41 @@ if movimientos:
     num_pages = (num_movimientos + items_per_page - 1) // items_per_page
     
     if num_pages > 1:
-         page = st.slider("Página", min_value=1, max_value=num_pages, step=1,value=1)
+        page = st.slider("Página", min_value=1, max_value=num_pages, step=1,value=1)
     else:
-         page = 1
+        page = 1
 
     start_index = (page - 1) * items_per_page
     end_index = min(start_index + items_per_page, num_movimientos)
-
-    if filtered_movimientos:
-      for movimiento in filtered_movimientos[start_index:end_index]:
-          id, tipo, descripcion, monto, fecha = movimiento
-          
-          col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 3, 2, 3])
-          
-          with col1:
-              st.write(f"ID: {id}")
-          with col2:
-              st.write(f"Tipo: {tipo}")
-          with col3:
-              st.write(f"Monto: {monto} €")
-          with col4:
-              st.write(f"Descripción: {descripcion}")
-          with col5:
-              st.write(f"Fecha: {fecha}")
-          with col6:
-              col7, col8, col9=st.columns(3)
-              with col7:
-                  if st.button("✏️", key=f"edit_btn_{id}", help="Editar Movimiento"):
-                      st.session_state[f"editar_{id}"] = True
-              with col8:
-                  borrar_movimiento(id)
-              with col9:
-                   duplicar_movimiento(id, tipo, descripcion, monto, fecha)
-          editar_movimiento(id, tipo, descripcion, monto, fecha)
-    else:
-         st.info("No hay movimientos registrados en esta fecha.")
     
-    st.calendar(default_value=selected_date,  format='YYYY-MM-DD',  on_change=st.rerun,  key=f'month_cal_{selected_date.year}-{selected_date.month}' ,
-             month_names= ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-              day_of_week_names = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-            )
-    st.session_state["calendar_highlighter"] = month_cal(selected_date)
-    st.session_state["calendar_highlighter"]
+    if filtered_movimientos:
+        for movimiento in filtered_movimientos[start_index:end_index]:
+            id, tipo, descripcion, monto, fecha = movimiento
+            
+            col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 3, 2, 3])
+            
+            with col1:
+                st.write(f"ID: {id}")
+            with col2:
+                st.write(f"Tipo: {tipo}")
+            with col3:
+                st.write(f"Monto: {monto} €")
+            with col4:
+                st.write(f"Descripción: {descripcion}")
+            with col5:
+                st.write(f"Fecha: {fecha}")
+            with col6:
+                col7, col8, col9=st.columns(3)
+                with col7:
+                    if st.button("✏️", key=f"edit_btn_{id}", help="Editar Movimiento"):
+                        st.session_state[f"editar_{id}"] = True
+                with col8:
+                    borrar_movimiento(id)
+                with col9:
+                     duplicar_movimiento(id, tipo, descripcion, monto, fecha)
+            editar_movimiento(id, tipo, descripcion, monto, fecha)
+    else:
+       st.info("No hay movimientos registrados en esta fecha.")
+
 else:
     st.info("No hay movimientos registrados.")

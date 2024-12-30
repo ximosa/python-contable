@@ -94,16 +94,6 @@ min_date = min(all_dates) if all_dates else date.today()
 max_date = max(all_dates) if all_dates else date.today()
 selected_date = st.date_input("Selecciona una fecha", min_value=min_date, max_value=max_date, value=date.today())
 
-# Función para marcar los días que tienen movimientos
-def month_cal(fecha):
-  with_moves = set()
-  for movimiento in movimientos:
-     if date.fromisoformat(movimiento[4]).month == fecha.month and date.fromisoformat(movimiento[4]).year == fecha.year:
-         with_moves.add(date.fromisoformat(movimiento[4]))
-
-  def highlight(date):
-       return date in with_moves
-  return highlight
 
 # Mostrar los movimientos
 st.subheader("Movimientos Registrados")
@@ -169,12 +159,6 @@ if movimientos:
                      next_page()
     else:
          st.info("No hay movimientos registrados en esta fecha.")
-    
-    st.calendar(default_value=selected_date,  format='YYYY-MM-DD',  on_change=st.rerun,  key=f'month_cal_{selected_date.year}-{selected_date.month}' ,
-             month_names= ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-              day_of_week_names = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-            )
-    st.session_state["calendar_highlighter"] = month_cal(selected_date)
-    st.session_state["calendar_highlighter"]
+
 else:
     st.info("No hay movimientos registrados.")

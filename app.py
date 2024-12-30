@@ -20,11 +20,11 @@ def editar_movimiento(id, tipo, descripcion, monto, fecha):
         with st.form(key=f"editar_form_{id}"):
             col1, col2 = st.columns(2)
             with col1:
-              edit_tipo = st.radio("Tipo", options=["Ingreso", "Gasto"], index=0 if tipo == "Ingreso" else 1, horizontal=True)
-              edit_monto = st.number_input("Monto (€)", value=int(monto), step=1, format="%d")
+                edit_tipo = st.radio("Tipo", options=["Ingreso", "Gasto"], index=0 if tipo == "Ingreso" else 1, horizontal=True)
+                edit_monto = st.number_input("Monto (€)", value=int(monto), step=1, format="%d")
             with col2:
-              edit_descripcion = st.text_input("Descripción", value=descripcion)
-              edit_fecha = st.date_input("Fecha", value=date.fromisoformat(fecha))
+                edit_descripcion = st.text_input("Descripción", value=descripcion)
+                edit_fecha = st.date_input("Fecha", value=date.fromisoformat(fecha))
             col3, col4=st.columns(2)
             with col3:
                if st.form_submit_button("Guardar cambios"):
@@ -33,27 +33,42 @@ def editar_movimiento(id, tipo, descripcion, monto, fecha):
                   st.rerun()
             with col4:
                 if st.form_submit_button("Cancelar"):
-                     st.session_state[f"editar_{id}"] = False
-                     st.rerun()
+                    st.session_state[f"editar_{id}"] = False
+                    st.rerun()
 
 # Función para el borrado
 def borrar_movimiento(id):
-    if st.button(f"Borrar", key=f"borrar_btn_{id}"):
+    if st.button("🗑️", key=f"borrar_btn_{id}", help="Borrar Movimiento"):
         db.borrar_movimiento(id)
         st.success("Movimiento borrado")
         st.rerun()
 
+# Función para duplicar
+def duplicar_movimiento(tipo, descripcion, monto, fecha):
+    if st.button("➕", key=f"duplicar_btn", help="Repetir Movimiento"):
+        db.insertar_movimiento(tipo, descripcion, monto, fecha)
+        st.success("Movimiento duplicado")
+        st.rerun()
+
+
 # Configuración de la página Streamlit
 st.set_page_config(page_title="Control de Finanzas", page_icon="💰")
 st.title("Control de Finanzas")
+
+# Mostrar el balance total arriba
+movimientos = db.obtener_movimientos()
+if movimientos:
+    balance = calcular_balance(movimientos)
+    st.markdown(f"<h2 style='text-align:center;'>Balance Total: {balance} €</h2>", unsafe_allow_html=True)
+
 
 # Formulario para añadir un nuevo movimiento
 with st.form(key="nuevo_movimiento"):
     st.subheader("Nuevo Movimiento")
     col1, col2 = st.columns(2)
     with col1:
-         tipo = st.radio("Tipo", options=["Ingreso", "Gasto"], horizontal=True)
-         monto = st.number_input("Monto (€)", step=1, format="%d")
+        tipo = st.radio("Tipo", options=["Ingreso", "Gasto"], horizontal=True)
+        monto = st.number_input("Monto (€)", step=1, format="%d")
     with col2:
         descripcion = st.text_input("Descripción")
         fecha = st.date_input("Fecha", value=date.today())
@@ -62,20 +77,14 @@ with st.form(key="nuevo_movimiento"):
         st.success("Movimiento añadido")
         st.rerun()
 
-
-# Mostrar los movimientos y el balance
+# Mostrar los movimientos
 st.subheader("Movimientos Registrados")
-movimientos = db.obtener_movimientos()
-
 if movimientos:
-    balance = calcular_balance(movimientos)
-    st.markdown(f"**Balance Total:** {balance} €")
-
     for movimiento in movimientos:
         id, tipo, descripcion, monto, fecha = movimiento
-
-        col1, col2, col3, col4, col5 = st.columns(5)
-
+        
+        col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 3, 2, 3])
+        
         with col1:
             st.write(f"ID: {id}")
         with col2:
@@ -85,15 +94,18 @@ if movimientos:
         with col4:
             st.write(f"Descripción: {descripcion}")
         with col5:
-            st.write(f"Fecha: {fecha}")
-            
-        col6, col7 = st.columns(2)
+             st.write(f"Fecha: {fecha}")
         with col6:
-             if st.button("Editar", key=f"edit_btn_{id}"):
-                st.session_state[f"editar_{id}"] = True
-        with col7:
-            borrar_movimiento(id)
+             col7, col8, col9=st.columns(3)
+             with col7:
+                if st.button("✏️", key=f"edit_btn_{id}", help="Editar Movimiento"):
+                    st.session_state[f"editar_{id}"] = True
+             with col8:
+                borrar_movimiento(id)
+             with col9:
+                 duplicar_movimiento(tipo, descripcion, monto, fecha)
         editar_movimiento(id, tipo, descripcion, monto, fecha)
+
 
 else:
     st.info("No hay movimientos registrados.")

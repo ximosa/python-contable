@@ -94,7 +94,6 @@ min_date = min(all_dates) if all_dates else date.today()
 max_date = max(all_dates) if all_dates else date.today()
 selected_date = st.date_input("Selecciona una fecha", min_value=min_date, max_value=max_date, value=date.today())
 
-
 # Mostrar los movimientos
 st.subheader("Movimientos Registrados")
 if movimientos:
@@ -121,7 +120,7 @@ if movimientos:
     
     if filtered_movimientos:
        
-         for movimiento in filtered_movimientos[start_index:end_index]:
+        for movimiento in filtered_movimientos[start_index:end_index]:
             id, tipo, descripcion, monto, fecha = movimiento
             
             col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 3, 2, 3])
@@ -147,16 +146,16 @@ if movimientos:
                      duplicar_movimiento(id, tipo, descripcion, monto, fecha)
             editar_movimiento(id, tipo, descripcion, monto, fecha)
 
-         if num_pages > 1:
-           col1, col2, col3 = st.columns([1,3,1])
-           with col1:
-                if st.button("<", disabled=st.session_state['page_number'] <= 1):
-                    prev_page()
-           with col2:
-               st.markdown(f"<p style='text-align:center;'>Página {st.session_state['page_number']} de {num_pages}</p>", unsafe_allow_html=True)
-           with col3:
-                 if st.button(">", disabled=st.session_state['page_number'] >= num_pages):
-                     next_page()
+        if num_pages > 1:
+            col1, col2, col3 = st.columns([1, 3, 1])
+            with col1:
+                st.button("◀", disabled=st.session_state['page_number'] <= 1, on_click=prev_page,  help="Página Anterior")
+            with col2:
+                st.markdown(f"<p style='text-align:center;'>Página {st.session_state['page_number']} de {num_pages}</p>", unsafe_allow_html=True)
+            with col3:
+                st.button("▶", disabled=st.session_state['page_number'] >= num_pages, on_click=next_page,  help="Página Siguiente")
+
+
     else:
          st.info("No hay movimientos registrados en esta fecha.")
 

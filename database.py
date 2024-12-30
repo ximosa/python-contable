@@ -12,7 +12,7 @@ def crear_tabla():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tipo TEXT NOT NULL,
             descripcion TEXT NOT NULL,
-            monto REAL NOT NULL,
+            monto INTEGER NOT NULL,
             fecha DATE NOT NULL
         )
     """)
